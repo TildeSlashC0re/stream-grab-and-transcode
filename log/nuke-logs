@@ -1,0 +1,13 @@
+#!/bin/bash
+WORKDIR=/chronos/Archivar
+
+# Coloring
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+cd $WORKDIR/log;
+find . -type f \( -name "*.log" -not -name "ffmpeg.log" -not -name "ffmpeg.log.old" \) -print0 | xargs -I{} -0 rm {};/
+truncate -s 5M ffmpeg.log.old;
+echo "nuked" > ffmpeg.log;
+printf "\n\n${BLUE}logs nuked!${NC}\n"
+ls -lah /chronos/Archivar/log

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+pipe=./ffmpeg-queue
+trap "rm -f $pipe" EXIT
+
+# creating the FIFO    
+[[ -p $pipe ]] || mkfifo $pipe
+
+while true; do
+    # can't just use "while read line" if we 
+    # want this script to continue running.
+    read line < $pipe
+
+    # now implementing a bit of security,
+    # feel free to improve it.
+    # we ensure that the command is a ffmpeg one.
+    [[ $line =~ ^ffmpeg ]] && bash <<< "$line"
+done

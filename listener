@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+# TO-DO
+# * be /comfy/
+#
+
+STREAM="" # anything streamlink-compatible really
+WORKDIR="" # absolute path to the root of this repo
+LOGDIR="" # absolute path to log-dir of this repo
+
+PLAYER="mpv" # anything that works for you, for me it's mpv
+PLAYER_OPTIONS="" # options you want to pass to the player. E.g.: --mute or --fs
+
+# Coloring
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+
+
+#
+# Exiting the listener will:
+# Tail ffmpeg log
+# Remove 0-byte files in $WORKDIR recursively
+# Ask for the scheduler to be killed
+# Say goodbye
+trap '(printf "\n\n${BLUE}ffmpeg${NC} log:\n"; \
+    tail -F $LOGDIR/ffmpeg.log 2>/dev/null; \
+    cleanup; \
+    printf "\n\n\nyou might want to kill the ${BLUE}scheduler${NC} manually when ffmpeg is done transcoding \n(I will ask you anyway)!\nyou can ${BLUE}check the current job status${NC} via:\n\n    tail -F $LOGDIR/ffmpeg.log"; \
+    askkill; \
+    printf "\n\n${BLUE}bye${NC}!");' EXIT
+
+#
+# kill scheduler prompt
+askkill()
+{
+    printf "\n\n\ndo you want to kill the ${BLUE}scheduler${NC}?\n"
+    select yn in "Yes" "No" "Print Log"; do
+    case $yn in
+        Yes ) pkill scheduler; break;;
+        No ) break;;
+        Print\ Log ) printf "\n\n${BLUE}ffmpeg${NC} log:\n"; tail -F $LOGDIR/ffmpeg.log 2>/dev/null; askkill; break;;
+    esac
+done
+}
+
+cleanup()
+{
+    find . -type f \( -not -name "ffmpeg.log" \) -size 0 -print0 | xargs -I{} -0 rm {};
+}
+
+
+#
+# start ffmpeg-scheduler if it doesn't run yet
+if ! pgrep -x "scheduler" > /dev/null
+    then
+        nohup ./scheduler >/dev/null 2>&1 &
+        printf "\n\n${BLUE}ffmpeg-scheduler started in background.${NC}\n";
+    else
+        printf "\n\n${BLUE}ffmpeg-scheduler already running.${NC}\n";
+fi
+sleep 1s;
+
+#
+# start loop
+while true; do
+    DATE="$(date +%m_%d_%Y-%H:%M:%S-%s)"
+    printf "\n\nwill write to ${BLUE}"$DATE"${NC}.mp4\n";
+    cd $WORKDIR;
+
+    #
+    # Wait for signal at $STREAM
+    streamlink $STREAM -O | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS > $LOGDIR/$DATE.log;
+
+    #
+    # Send transcoding job to the queue
+    setsid nohup ./transcoder > /dev/null 2>&1 &
+    #>> $LOGDIR/ffmpeg.log
+    printf "\n\nscheduling job ${BLUE}"$DATE"${NC} with ffmpeg\n";
+
+    printf "logging transcoder to $LOGDIR/${BLUE}"ffmpeg.log"${NC}\n";
+    sleep 1s;
+
+    printf "\n\nall tasks for ${BLUE}"$DATE"${NC}.mp4 scheduled\n\n";
+
+    #
+    # Clean up 0byte data recursively
+    printf "cleaning up!\n"
+    cd $WORKDIR;
+    cleanup;
+
+    #
+    # grace-period, run again
+    sleep 2s;
+    printf "${BLUE}listening once more${NC} ☜(ﾟヮﾟ☜)!\n"
+    echo "- - - - - - - - - - - - - - - - - - - - - -"
+    echo "- - - - - - N E W       J O B - - - - - - -"
+    echo "- - - - - - - - - - - - - - - - - - - - - -"
+done
+# end loop
+#

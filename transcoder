@@ -1,0 +1,33 @@
+#!/bin/bash
+LOGDIR=/chronos/Archivar/log
+
+#
+# push current state of logfile to logfile.log.old
+# clean up
+# inform if it is safe to kill the scheduler
+logrotate ()
+{
+   cat $LOGDIR/ffmpeg.log >> $LOGDIR/ffmpeg.log.old;
+   echo "waiting for new job. . ." > $LOGDIR/ffmpeg.log;
+   echo "If you see no more additional output after this line there are no active jobs in ffmpeg, you can safely kill the scheduler!" >> $LOGDIR/ffmpeg.log;
+   echo "";
+   echo "see $LOGDIR/ffmpeg.log.old for completed jobs!"
+}
+
+cd src;
+for FILE in *.mp4; do
+    ffmpeg -y -i $FILE \
+        -hide_banner \
+        -r 30 \
+        -c:v libx264 \
+        -preset veryfast \
+        -crf 21 \
+        -threads 8 \
+        -speed 4 \
+        -movflags +faststart \
+        -c:a aac \
+        -af "aresample=first_pts=0" \
+        -f mp4 ../out/"$FILE" 2>&1 | tee $LOGDIR/ffmpeg.log ../ffmpeg-queue;
+    mv $FILE ../raw-src;
+done
+logrotate;
