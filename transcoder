@@ -21,13 +21,13 @@ for FILE in *.mp4; do
         -r 30 \
         -c:v libx264 \
         -preset veryfast \
-        -crf 21 \
+        -crf 17 \ # more is less! (visual quality decreases as CRF increases)
         -threads 8 \
         -speed 4 \
         -movflags +faststart \
         -c:a aac \
         -af "aresample=first_pts=0" \
-        -f mp4 ../out/"$FILE" 2>&1 | tee $LOGDIR/ffmpeg.log ../ffmpeg-queue;
+        -f mp4 ../out/"$FILE" > $LOGDIR/ffmpeg.log 2>&1 | tee ../ffmpeg-queue;
     mv $FILE ../raw-src;
 done
 logrotate;

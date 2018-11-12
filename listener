@@ -2,26 +2,26 @@
 #
 # TO-DO
 # * be /comfy/
-#
+# make sure to adjust your ~/.config/streamlink/config to your needs
 
-STREAM="" # anything streamlink-compatible really
-WORKDIR="" # absolute path to the root of this repo
-LOGDIR="" # absolute path to log-dir of this repo
+#STREAM="https://www.stream.me/"
+#STREAM="https://www.youtube.com/watch?v=" # Use full links for YouTube (!= youtu.be)
+STREAM=""
+WORKDIR="" # absolute path to the directory where this repo lives
+LOGDIR=$WORKDIR"/log" # logs 'n everything
 
-PLAYER="mpv" # anything that works for you, for me it's mpv
-PLAYER_OPTIONS="" # options you want to pass to the player. E.g.: --mute or --fs
+PLAYER="mpv" # vlc works too, I guess. . . 
+PLAYER_OPTIONS="--cache-default 20480" # pass option-flags to your player
 
 # Coloring
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-
-
 #
 # Exiting the listener will:
 # Tail ffmpeg log
 # Remove 0-byte files in $WORKDIR recursively
-# Ask for the scheduler to be killed
+# Ask for the scheduler/ffmpeg to be killed
 # Say goodbye
 trap '(printf "\n\n${BLUE}ffmpeg${NC} log:\n"; \
     tail -F $LOGDIR/ffmpeg.log 2>/dev/null; \
@@ -34,16 +34,18 @@ trap '(printf "\n\n${BLUE}ffmpeg${NC} log:\n"; \
 # kill scheduler prompt
 askkill()
 {
-    printf "\n\n\ndo you want to kill the ${BLUE}scheduler${NC}?\n"
+    printf "\n\n\ndo you want to kill the ${BLUE}scheduler${NC} and ${BLUE}jobs that still might be running?${NC}?\n"
     select yn in "Yes" "No" "Print Log"; do
     case $yn in
-        Yes ) pkill scheduler; break;;
+        Yes ) pkill scheduler;kill $(pgrep -f "^(ffmpeg -y -i.*.mp4.-hide_banner).*$") > /dev/null 2>&1 & break;;
         No ) break;;
         Print\ Log ) printf "\n\n${BLUE}ffmpeg${NC} log:\n"; tail -F $LOGDIR/ffmpeg.log 2>/dev/null; askkill; break;;
     esac
 done
 }
 
+#
+# remove 0byte files routine
 cleanup()
 {
     find . -type f \( -not -name "ffmpeg.log" \) -size 0 -print0 | xargs -I{} -0 rm {};
