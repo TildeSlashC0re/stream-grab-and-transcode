@@ -6,7 +6,8 @@
 
 ```bash
     git clone https://github.com/TildeSlashC0re/stream-grab-and-transcode.git;
-    cd stream-grab-and-transcode
+    cd stream-grab-and-transcode;
+    edit config
 ```
 
 ## Dependencies
