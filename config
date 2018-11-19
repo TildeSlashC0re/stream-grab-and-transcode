@@ -1,0 +1,16 @@
+#!/bin/bash
+
+WORKDIR="/home/c0re/git-c0re/stream-grab-and-transcode"
+LOGDIR=$WORKDIR"/log"
+
+STREAM="https://stream.me/collapz"
+
+PLAYER="mpv"
+PLAYER_OPTIONS="--mute"
+
+# ===
+# Coloring
+# ===
+BLUE='\033[0;34m'
+NC='\033[0m'
+

@@ -3,19 +3,7 @@
 # TO-DO
 # * be /comfy/
 # make sure to adjust your ~/.config/streamlink/config to your needs
-
-#STREAM="https://www.stream.me/"
-#STREAM="https://www.youtube.com/watch?v=" # Use full links for YouTube (!= youtu.be)
-STREAM=""
-WORKDIR="" # absolute path to the directory where this repo lives
-LOGDIR=$WORKDIR"/log" # logs 'n everything
-
-PLAYER="mpv" # vlc works too, I guess. . . 
-PLAYER_OPTIONS="--cache-default 20480" # pass option-flags to your player
-
-# Coloring
-BLUE='\033[0;34m'
-NC='\033[0m'
+source config
 
 #
 # Exiting the listener will:

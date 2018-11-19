@@ -1,12 +1,10 @@
 #!/bin/bash
-WORKDIR=/chronos/Archivar
+source config
 
-# Coloring
-BLUE='\033[0;34m'
-NC='\033[0m'
 
-cd $WORKDIR/log;
-find . -type f \( -name "*.log" -not -name "ffmpeg.log" -not -name "ffmpeg.log.old" \) -print0 | xargs -I{} -0 rm {};/
+
+cd $LOGDIR;
+find . -type f \( -name "*.log" -not -name "ffmpeg.log" -not -name "ffmpeg.log.old" \) -print0 | xargs -I{} -0 rm {};
 
 for file in ffmpeg.log.old; do
     tail -200000 "$file" > "$file.tmp" # retain 200k lines of logs in ffmpeg.old
@@ -15,4 +13,4 @@ done
 
 echo "nuked" > ffmpeg.log;
 printf "\n\n${BLUE}logs nuked!${NC}\n"
-ls -lah /chronos/Archivar/log
+ls -lah $LOGDIR

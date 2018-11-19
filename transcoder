@@ -1,5 +1,5 @@
 #!/bin/bash
-LOGDIR=/chronos/Archivar/log
+source config
 
 #
 # push current state of logfile to logfile.log.old
