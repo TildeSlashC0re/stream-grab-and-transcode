@@ -1,1 +1,5 @@
-config
+/config
+/log/*.log
+/src/*.mp4
+/raw-src/*.mp4
+/out/*.mp4
