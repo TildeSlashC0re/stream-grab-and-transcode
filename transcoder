@@ -8,7 +8,7 @@ source config
 logrotate ()
 {
    cat $LOGDIR/ffmpeg.log >> $LOGDIR/ffmpeg.log.old;
-   echo "waiting for new job. . ." > $LOGDIR/ffmpeg.log;
+   echo "waiting for new job. . ." >> $LOGDIR/ffmpeg.log;
    echo "If you see no more additional output after this line there are no active jobs in ffmpeg, you can safely kill the scheduler!" >> $LOGDIR/ffmpeg.log;
    echo "";
    echo "see $LOGDIR/ffmpeg.log.old for completed jobs!"
@@ -21,7 +21,7 @@ for FILE in *.mp4; do
         -r 30 \
         -c:v libx264 \
         -preset veryfast \
-        -crf 17 \ # more is less! (visual quality decreases as CRF increases)
+        -crf 17 `# more is less! (visual quality decreases as CRF increases)` \
         -threads 8 \
         -speed 4 \
         -movflags +faststart \
