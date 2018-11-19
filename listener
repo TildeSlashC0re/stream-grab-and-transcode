@@ -11,18 +11,41 @@ source config
 # Remove 0-byte files in $WORKDIR recursively
 # Ask for the scheduler/ffmpeg to be killed
 # Say goodbye
-trap '(printf "\n\n${BLUE}ffmpeg${NC} log:\n"; \
+trap endscreen INT
+
+runjobs()
+{
+    setsid nohup ./transcoder > /dev/null 2>&1 &
+}
+
+kill_loop()
+{
+    break > /dev/null 2>&1 ; runjobs; endscreen;
+}
+
+
+endscreen()
+{
+    printf "\n\n${BLUE}ffmpeg${NC} log:\n"; \
     tail -F $LOGDIR/ffmpeg.log 2>/dev/null; \
     cleanup; \
     printf "\n\n\nyou might want to kill the ${BLUE}scheduler${NC} manually when ffmpeg is done transcoding \n(I will ask you anyway)!\nyou can ${BLUE}check the current job status${NC} via:\n\n    tail -F $LOGDIR/ffmpeg.log"; \
     askkill; \
-    printf "\n\n${BLUE}bye${NC}!");' EXIT
+    printf "\n\n${BLUE}bye${NC}!\n"
+    exit 1;
+}
+
+printout()
+{
+    echo lolnope
+}
 
 #
 # kill scheduler prompt
 askkill()
 {
     printf "\n\n\ndo you want to kill the ${BLUE}scheduler${NC} and ${BLUE}jobs that still might be running?${NC}?\n"
+    trap printout INT
     select yn in "Yes" "No" "Print Log"; do
     case $yn in
         Yes ) pkill scheduler;kill $(pgrep -f "^(ffmpeg -y -i.*.mp4.-hide_banner).*$") > /dev/null 2>&1 & break;;
@@ -40,6 +63,27 @@ cleanup()
 }
 
 
+basicsanity()
+{
+    if [ -z "$WORKDIR" ];
+    then
+        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        printf "P L E A S E   ${BLUE}D E F I N E   W O R K D I R${NC}   I N   ${BLUE}. / C O N F I G${NC}\n"
+        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        exit 2;
+    fi
+
+    if [ -z "$STREAM" ];
+    then
+        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        printf "P L E A S E   ${BLUE}D E F I N E   S T R E A M${NC}   I N   ${BLUE}. / C O N F I G${NC}\n"
+        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        exit 2;
+    fi
+}
+
+basicsanity;
+
 #
 # start ffmpeg-scheduler if it doesn't run yet
 if ! pgrep -x "scheduler" > /dev/null
@@ -48,24 +92,35 @@ if ! pgrep -x "scheduler" > /dev/null
         printf "\n\n${BLUE}ffmpeg-scheduler started in background.${NC}\n";
     else
         printf "\n\n${BLUE}ffmpeg-scheduler already running.${NC}\n";
-fi
+    fi
 sleep 1s;
 
 #
 # start loop
 while true; do
+
+    trap kill_loop INT
     DATE="$(date +%m_%d_%Y-%H:%M:%S-%s)"
     printf "\n\nwill write to ${BLUE}"$DATE"${NC}.mp4\n";
     cd $WORKDIR;
+    tail -f $LOGDIR/$DATE.log &
 
     #
-    # Wait for signal at $STREAM
-    streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
+    # Wait for signal at $STREAM, run in headless if $PLAYER is undefined
+    if [ -z "$PLAYER" ];
+    then
+        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        printf -- "- - - - - R U N N I N G   I N   ${BLUE}H E A D L E S S   M O D E${NC} - - - - - \n"
+        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+        streamlink $STREAM -o src/$DATE.mp4 >> $LOGDIR/$DATE.log 2>&1;
+    else
+        streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
+    fi
+
 
     #
     # Send transcoding job to the queue
-    setsid nohup ./transcoder > /dev/null 2>&1 &
-    #>> $LOGDIR/ffmpeg.log
+    runjobs;
     printf "\n\nscheduling job ${BLUE}"$DATE"${NC} with ffmpeg\n";
 
     printf "logging transcoder to $LOGDIR/${BLUE}"ffmpeg.log"${NC}\n";
