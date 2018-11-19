@@ -72,7 +72,7 @@ while true; do
 
     #
     # Wait for signal at $STREAM
-    streamlink $STREAM -O | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS > $LOGDIR/$DATE.log;
+    streamlink $STREAM -O 2> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
 
     #
     # Send transcoding job to the queue
