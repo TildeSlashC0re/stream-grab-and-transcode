@@ -7,7 +7,8 @@
 ```bash
     git clone https://github.com/TildeSlashC0re/stream-grab-and-transcode.git;
     cd stream-grab-and-transcode;
-    edit config
+    cp config.example config
+    nano config # Provide, at minimum, $WORKDIR and $STREAM
 ```
 
 ## Dependencies
