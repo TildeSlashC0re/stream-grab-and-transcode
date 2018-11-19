@@ -1,4 +1,11 @@
-/config
+*
+!*.*
+!*/
+!listener
+!transcoder
+!scheduler
+!/log/nuke-logs
+config
 /log/*.log
 /log/*.log.old
 /src/*.mp4
