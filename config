@@ -1,0 +1,25 @@
+#!/bin/bash
+
+WORKDIR=""
+# ^ provide absolute path to the root of this directory
+LOGDIR=$WORKDIR"/log"
+
+STREAM=""
+# ^ target to grab e.g. https://stream.me/collapz
+# STREAM="https://www.youtube.com/watch?v=___________"
+# ^ Use unshortened (!= youtu.be) links for YouTube targets!
+
+PLAYER="mpv"
+# ^ the player of your choice, or none at all
+# PLAYER=""
+# ^ this will execute the script in headless-mode
+
+PLAYER_OPTIONS=""
+# ^ pass options to your player
+
+# ===
+# Coloring - Terminal Colors
+# ===
+BLUE='\033[0;34m'
+NC='\033[0m'
+
