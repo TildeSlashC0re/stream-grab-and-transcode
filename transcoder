@@ -1,33 +1,18 @@
 #!/bin/bash
 source config
 
-#
-# push current state of logfile to logfile.log.old
-# clean up
-# inform if it is safe to kill the scheduler
-logrotate ()
+cd $WORKDIR/src;
+shopt -s nullglob
+
+sendjob()
 {
-   cat $LOGDIR/ffmpeg.log >> $LOGDIR/ffmpeg.log.old;
-   echo "waiting for new job. . ." >> $LOGDIR/ffmpeg.log;
-   echo "If you see no more additional output after this line there are no active jobs in ffmpeg, you can safely kill the scheduler!" >> $LOGDIR/ffmpeg.log;
-   echo "";
-   echo "see $LOGDIR/ffmpeg.log.old for completed jobs!"
+    for FILE in *.mp4; do
+        [ -f "$FILE" ] || continue
+        echo "ffmpeg -y -i $WORKDIR/src/$FILE -hide_banner $ENCODER_FLAGS $WORKDIR/out/$FILE > $LOGDIR/ffmpeg.log 2>&1" > $WORKDIR/ffmpeg-queue
+        sleep 1s;
+        mv $FILE $WORKDIR/raw-src
+    done
 }
 
-cd src;
-for FILE in *.mp4; do
-    ffmpeg -y -i $FILE \
-        -hide_banner \
-        -r 30 \
-        -c:v libx264 \
-        -preset veryfast \
-        -crf 17 `# more is less! (visual quality decreases as CRF increases)` \
-        -threads 8 \
-        -speed 4 \
-        -movflags +faststart \
-        -c:a aac \
-        -af "aresample=first_pts=0" \
-        -f mp4 ../out/"$FILE" > $LOGDIR/ffmpeg.log 2>&1 | tee ../ffmpeg-queue;
-    mv $FILE ../raw-src;
-done
-logrotate;
+sendjob 2> /dev/null;
+cd $WORKDIR

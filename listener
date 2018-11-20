@@ -1,146 +1,193 @@
 #!/bin/bash
-#
-# TO-DO
-# * be /comfy/
-# make sure to adjust your ~/.config/streamlink/config to your needs
-source config
+source config 2>/dev/null
 
-#
-# Exiting the listener will:
-# Tail ffmpeg log
-# Remove 0-byte files in $WORKDIR recursively
-# Ask for the scheduler/ffmpeg to be killed
-# Say goodbye
-trap endscreen INT
+# Go to end-sequence on CTRL-C
+trap rollcredits SIGINT SIGTERM
 
-runjobs()
+##
+## Declare functions
+##
+
+# Various messages
+lineprint()
 {
-    setsid nohup ./transcoder > /dev/null 2>&1 &
+    printf -- "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n"
 }
 
-kill_loop()
+saygoodbye()
 {
-    break > /dev/null 2>&1 ; runjobs; endscreen;
+    sleep 1s;
+    lineprint
+    printf "${BLUE}bye${NC}!"
+    lineprint
 }
 
-
-endscreen()
+# Inform user of script re-run
+loop_end_message()
 {
-    printf "\n\n${BLUE}ffmpeg${NC} log:\n"; \
-    tail -F $LOGDIR/ffmpeg.log 2>/dev/null; \
-    cleanup; \
-    printf "\n\n\nyou might want to kill the ${BLUE}scheduler${NC} manually when ffmpeg is done transcoding \n(I will ask you anyway)!\nyou can ${BLUE}check the current job status${NC} via:\n\n    tail -F $LOGDIR/ffmpeg.log"; \
-    askkill; \
-    printf "\n\n${BLUE}bye${NC}!\n"
-    exit 1;
+    sleep 2s;
+            printf "${BLUE}listening once more${NC} ☜(ﾟヮﾟ☜)!\n"
+            echo "- - - - - - - - - - - - - - - - - - - - - -"
+            echo "- - - - - - N E W       J O B - - - - - - -"
+            echo "- - - - - - - - - - - - - - - - - - - - - -"
 }
 
-printout()
+# VERY basic sanity checks ... config provided? WORKDIR defined? STREAM defined?
+basicsanity()
 {
-    echo lolnope
+    if [ ! -f ./config ]; then
+        lineprint
+        printf "${BLUE}N O   C O N F I G   F O U N D${NC}!   » » »   S E E   ${BLUE}R E A D M E . m d ${NC}"
+        lineprint
+        exit 2;
+    fi
+
+    if [ -z "$WORKDIR" ]; then
+        lineprint
+        printf "P L E A S E   ${BLUE}D E F I N E   W O R K D I R${NC}   I N   ${BLUE}. / C O N F I G${NC}"
+        lineprint
+        exit 2;
+    fi
+
+    if [ -z "$STREAM" ]; then
+        lineprint
+        printf "P L E A S E   ${BLUE}D E F I N E   S T R E A M${NC}   I N   ${BLUE}. / C O N F I G${NC}"
+        lineprint
+        exit 2;
+    fi
 }
 
-#
-# kill scheduler prompt
-askkill()
-{
-    printf "\n\n\ndo you want to kill the ${BLUE}scheduler${NC} and ${BLUE}jobs that still might be running?${NC}?\n"
-    trap printout INT
-    select yn in "Yes" "No" "Print Log"; do
-    case $yn in
-        Yes ) pkill scheduler;kill $(pgrep -f "^(ffmpeg -y -i.*.mp4.-hide_banner).*$") > /dev/null 2>&1 & break;;
-        No ) break;;
-        Print\ Log ) printf "\n\n${BLUE}ffmpeg${NC} log:\n"; tail -F $LOGDIR/ffmpeg.log 2>/dev/null; askkill; break;;
-    esac
-done
-}
-
-#
-# remove 0byte files routine
-cleanup()
+# Remove 0byte files recursively inside WORKDIR
+cleanup_0byte()
 {
     find . -type f \( -not -name "ffmpeg.log" \) -size 0 -print0 | xargs -I{} -0 rm {};
 }
 
-
-basicsanity()
+# Log output to console
+log_encoder()
 {
-    if [ -z "$WORKDIR" ];
-    then
-        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-        printf "P L E A S E   ${BLUE}D E F I N E   W O R K D I R${NC}   I N   ${BLUE}. / C O N F I G${NC}\n"
-        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-        exit 2;
-    fi
+    lineprint
+    printf "${BLUE}ffmpeg${NC} log:"
+    lineprint
+    tail -F -n 10 $LOGDIR/ffmpeg.log 2>/dev/null;
+}
 
-    if [ -z "$STREAM" ];
-    then
-        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-        printf "P L E A S E   ${BLUE}D E F I N E   S T R E A M${NC}   I N   ${BLUE}. / C O N F I G${NC}\n"
-        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-        exit 2;
+log_listener()
+{
+    lineprint
+    printf "${BLUE}streamlink${NC} log:"
+    lineprint
+    printf "\n"
+    tail -F $LOGDIR/$DATE.log 2>/dev/null &
+}
+
+# End log output to console
+kill_log_encoder()
+{
+    kill $(pgrep -f "^(tail -F.*$LOGDIR/ffmpeg.log).*$") 2>/dev/null
+}
+
+kill_log_listener()
+{
+    kill $(pgrep -f "^(tail -F.*$LOGDIR/$DATE).*$") 2>/dev/null
+}
+
+
+# End-sequence
+rollcredits()
+{
+    kill_log_listener;
+    runjobs;
+    cleanup_0byte;
+    log_encoder;
+    menu;
+}
+
+# Exit screen
+menu()
+{
+    trap menu SIGINT SIGTERM
+    lineprint
+    printf "Do you want to ${BLUE}kill the scheduler${NC}?"
+    lineprint
+    printf "${BLUE}[warning!]${NC} this will also ${BLUE}kill pending jobs${NC}!"
+    lineprint
+    kill_log_encoder;
+    select yn in "Yes" "No" "Show Log"; do
+        case $yn in
+            Yes ) kill_log_encoder; killjobs; pkill scheduler; saygoodbye; exit 0;;
+            No ) exit 0;;
+            Show\ Log ) log_encoder; menu;;
+        esac
+    done
+}
+
+# FFMPEG queue pipe
+runscheduler()
+{
+    if ! pgrep -x "scheduler" > /dev/null
+        then
+            setsid nohup ./scheduler >/dev/null 2>&1 &
+            printf "\n\n${BLUE}ffmpeg-scheduler${NC} started ${BLUE}in background.${NC}\n"
+        else
+            printf "\n\n${BLUE}ffmpeg-scheduler${NC} already running.${NC}\n"
     fi
 }
 
-basicsanity;
-
-#
-# start ffmpeg-scheduler if it doesn't run yet
-if ! pgrep -x "scheduler" > /dev/null
-    then
-        nohup ./scheduler >/dev/null 2>&1 &
-        printf "\n\n${BLUE}ffmpeg-scheduler started in background.${NC}\n";
-    else
-        printf "\n\n${BLUE}ffmpeg-scheduler already running.${NC}\n";
-    fi
-sleep 1s;
-
-#
-# start loop
-while true; do
-
-    trap kill_loop INT
+# Provide timestamp per job
+timestamp()
+{
     DATE="$(date +%m_%d_%Y-%H:%M:%S-%s)"
     printf "\n\nwill write to ${BLUE}"$DATE"${NC}.mp4\n";
-    cd $WORKDIR;
-    tail -f $LOGDIR/$DATE.log &
+}
 
-    #
-    # Wait for signal at $STREAM, run in headless if $PLAYER is undefined
+# Streamlink
+streamlink_listen()
+{
     if [ -z "$PLAYER" ];
-    then
-        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-        printf -- "- - - - - R U N N I N G   I N   ${BLUE}H E A D L E S S   M O D E${NC} - - - - - \n"
-        echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-        streamlink $STREAM -o src/$DATE.mp4 >> $LOGDIR/$DATE.log 2>&1;
-    else
-        streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
+            then
+                lineprint
+                printf -- "- - - - - R U N N I N G   I N   ${BLUE}H E A D L E S S   M O D E${NC} - - - - -"
+                lineprint
+
+                streamlink $STREAM -o src/$DATE.mp4 > $LOGDIR/$DATE.log 2>&1;
+            else
+                streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
     fi
+}
 
+# Send jobs to FFMPEG queue
+runjobs()
+{
+    setsid nohup ./transcoder > /dev/null 2>&1 &
+    lineprint
+    printf "${BLUE}sent jobs${NC} to scheduler!"
+    lineprint
+}
 
-    #
-    # Send transcoding job to the queue
-    runjobs;
-    printf "\n\nscheduling job ${BLUE}"$DATE"${NC} with ffmpeg\n";
+# Kill a running FFMPEG job
+killjobs()
+{
+    kill $(pgrep -f "^(ffmpeg -y -i.*.mp4.-hide_banner).*$") >/dev/null 2>&1 &
+}
 
-    printf "logging transcoder to $LOGDIR/${BLUE}"ffmpeg.log"${NC}\n";
-    sleep 1s;
+# That main-function really tied the room together.
+main()
+{
+    while true; do
+        cd $WORKDIR
+        timestamp;
+        log_listener;
+        streamlink_listen;
+        runjobs;
+        cleanup_0byte;
+        loop_end_message;
+    done
+}
 
-    printf "\n\nall tasks for ${BLUE}"$DATE"${NC}.mp4 scheduled\n\n";
-
-    #
-    # Clean up 0byte data recursively
-    printf "cleaning up!\n"
-    cd $WORKDIR;
-    cleanup;
-
-    #
-    # grace-period, run again
-    sleep 2s;
-    printf "${BLUE}listening once more${NC} ☜(ﾟヮﾟ☜)!\n"
-    echo "- - - - - - - - - - - - - - - - - - - - - -"
-    echo "- - - - - - N E W       J O B - - - - - - -"
-    echo "- - - - - - - - - - - - - - - - - - - - - -"
-done
-# end loop
-#
+##
+## Roll the script!
+##
+basicsanity;
+runscheduler;
+main

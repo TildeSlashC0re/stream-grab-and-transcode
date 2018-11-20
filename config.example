@@ -15,10 +15,14 @@ PLAYER="mpv"
 # ^ the player of your choice, or none at all
 #
 # PLAYER=""
-# ^ this will execute the script in headless-mode
+# ^ leaving $PLAYER undefined will run streamlink in headless-mode
 
 PLAYER_OPTIONS=""
 # ^ pass options to your player
+
+ENCODER_FLAGS="-r 30 -c:v libx264 -preset veryfast -crf 17 -threads 8 -speed 4 -movflags +faststart -c:a aac -af \"aresample=first_pts=0\" -f mp4"
+# ^ you might want to adjust those to something that fits your usecase better
+
 
 # ===
 # Coloring - Terminal Colors

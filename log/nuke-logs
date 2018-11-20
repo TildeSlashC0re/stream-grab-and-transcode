@@ -2,7 +2,6 @@
 source config
 
 
-
 cd $LOGDIR;
 find . -type f \( -name "*.log" -not -name "ffmpeg.log" -not -name "ffmpeg.log.old" \) -print0 | xargs -I{} -0 rm {};
 

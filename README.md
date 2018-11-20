@@ -1,4 +1,4 @@
-# SGAT - StreamGrab And Transcode [0.2]
+# SGAT - StreamGrab And Transcode [1.0]
 
 >A wrapper for ffmpeg and streamlink to grab your favorite streams live and encode them right after
 
@@ -25,11 +25,12 @@
     ./listener
 ```
 
-## Exiting The Process
-`CTRL` + `C` (until you're asked to kill off the scheduler / running jobs)
+## Exiting
+
+    `CTRL` + `C`
 
 
-## Nuking Logs
+## Cleaning Up Log Directory
 
 ```bash
     ./log/nuke-logs

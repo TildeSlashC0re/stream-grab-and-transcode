@@ -1,7 +1,24 @@
 #!/bin/bash
+source config
 
-pipe=./ffmpeg-queue
-trap "rm -f $pipe" EXIT
+jobscomplete()
+{
+    echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+    printf -- "- - - - - - - - - - - - ${BLUE}J O B   F I N I S H E D${NC} - - - - - - - - - - \n"
+    echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+    echo "waiting for new job. . ." >> $LOGDIR/ffmpeg.log;
+}
+
+logrotate ()
+{
+   cat $LOGDIR/ffmpeg.log >> $LOGDIR/ffmpeg.log.old;
+   printf "\nsee ${BLUE}$LOGDIR/ffmpeg.log.old${NC} for completed jobs!\n\n" >> $LOGDIR/ffmpeg.log
+}
+
+
+
+pipe=$WORKDIR/ffmpeg-queue
+trap "rm -f $pipe;" EXIT
 
 # creating the FIFO    
 [[ -p $pipe ]] || mkfifo $pipe
@@ -15,4 +32,6 @@ while true; do
     # feel free to improve it.
     # we ensure that the command is a ffmpeg one.
     [[ $line =~ ^ffmpeg ]] && bash <<< "$line"
+    logrotate; 
+    jobscomplete >> $LOGDIR/ffmpeg.log
 done
