@@ -1,0 +1,22 @@
+### Documentation:
+### https://streamlink.github.io/cli.html#configuration-file
+
+retry-streams 5 
+# ^ Delay, in seconds, between each attempt to fetch a stream
+
+retry-max 0 
+# ^ How many attempts before giving up on fetching? (0 = retry infinitely)
+
+default-stream=best,720p,480p
+# ^ Try for best quality, then 720p, then 480p 
+
+# Comment out the line below to allow quality below 480p
+stream-sorting-excludes=<480p
+
+### https://streamlink.github.io/cli.html#stream-transport-options
+stream-segment-threads=3
+stream-segment-attempts=3
+stream-segment-timeout=10
+stream-timeout=2
+http-timeout=10
+# ^ optimizing segment parameters (feel free to comment out and go with defaults)

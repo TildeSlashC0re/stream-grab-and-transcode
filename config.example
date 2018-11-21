@@ -8,15 +8,14 @@ LOGDIR=$WORKDIR"/log"
 
 STREAM=""
 # ^ target to grab e.g. https://stream.me/collapz
+#   leave empty if you want to provide the link manually
 #
 # STREAM="https://www.youtube.com/watch?v=___________"
-# ^ Use unshortened (!= youtu.be) links for YouTube targets!
+# ^ Do not use shortened (= youtu.be/*) links for YouTube targets!
 
 PLAYER="mpv"
 # ^ the player of your choice, or none at all
-#
-# PLAYER=""
-# ^ leaving $PLAYER undefined will run streamlink in headless-mode
+#   leave empty for headless mode
 
 PLAYER_OPTIONS=""
 # ^ pass options to your player

@@ -32,7 +32,7 @@ loop_end_message()
             echo "- - - - - - - - - - - - - - - - - - - - - -"
 }
 
-# VERY basic sanity checks ... config provided? WORKDIR defined? STREAM defined?
+# basic sanity checks ... config provided? WORKDIR defined? STREAM defined?
 basicsanity()
 {
     if [ ! -f ./config ]; then
@@ -50,10 +50,24 @@ basicsanity()
     fi
 
     if [ -z "$STREAM" ]; then
+        trap "saygoodbye; exit 0" SIGINT
         lineprint
-        printf "P L E A S E   ${BLUE}D E F I N E   S T R E A M${NC}   I N   ${BLUE}. / C O N F I G${NC}"
-        lineprint
-        exit 2;
+        printf "${BLUE}No \$STREAM defined${NC} in ${BLUE}./config${NC}!\nPlease provide a stream to grab now:\n"
+        read -p "" STREAM
+        if [ -z "$STREAM" ]; then
+            lineprint
+            echo "No stream provided. Exiting!";
+            saygoodbye
+            exit 1
+        else
+            if streamlink --can-handle-url $STREAM 2>/dev/null; then
+                true
+            else
+                echo "Incompatible stream provided. Exiting!";
+                saygoodbye
+                exit 1 
+            fi
+        fi
     fi
 }
 
@@ -149,9 +163,9 @@ streamlink_listen()
                 printf -- "- - - - - R U N N I N G   I N   ${BLUE}H E A D L E S S   M O D E${NC} - - - - -"
                 lineprint
 
-                streamlink $STREAM -o src/$DATE.mp4 > $LOGDIR/$DATE.log 2>&1;
+                streamlink --config config.streamlink $STREAM -o src/$DATE.mp4 > $LOGDIR/$DATE.log 2>&1;
             else
-                streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
+                streamlink --config config.streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
     fi
 }
 
@@ -174,6 +188,7 @@ killjobs()
 # That main-function really tied the room together.
 main()
 {
+    trap rollcredits SIGINT
     while true; do
         cd $WORKDIR
         timestamp;

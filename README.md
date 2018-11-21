@@ -8,7 +8,10 @@
     git clone https://github.com/TildeSlashC0re/stream-grab-and-transcode.git;
     cd stream-grab-and-transcode;
     cat config.example > config;
-    nano config # Provide, at minimum, $WORKDIR and $STREAM
+    nano config # Provide, at minimum, $WORKDIR
+
+    # Optionally you can also
+    nano config.streamlink
 ```
 
 ## Dependencies
