@@ -7,7 +7,7 @@
 ```bash
     git clone https://github.com/TildeSlashC0re/stream-grab-and-transcode.git;
     cd stream-grab-and-transcode;
-    cp config.example config
+    cat config.example > config;
     nano config # Provide, at minimum, $WORKDIR and $STREAM
 ```
 
@@ -27,8 +27,9 @@
 
 ## Exiting
 
-    `CTRL` + `C`
-
+```bash
+    CTRL + C
+```
 
 ## Cleaning Up Log Directory
 

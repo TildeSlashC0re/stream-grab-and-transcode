@@ -98,7 +98,6 @@ rollcredits()
 {
     kill_log_listener;
     runjobs;
-    cleanup_0byte;
     log_encoder;
     menu;
 }
@@ -116,7 +115,7 @@ menu()
     select yn in "Yes" "No" "Show Log"; do
         case $yn in
             Yes ) kill_log_encoder; killjobs; pkill scheduler; saygoodbye; exit 0;;
-            No ) exit 0;;
+            No ) saygoodbye; exit 0;;
             Show\ Log ) log_encoder; menu;;
         esac
     done
@@ -159,9 +158,10 @@ streamlink_listen()
 # Send jobs to FFMPEG queue
 runjobs()
 {
+    cleanup_0byte;
     setsid nohup ./transcoder > /dev/null 2>&1 &
     lineprint
-    printf "${BLUE}sent jobs${NC} to scheduler!"
+    printf "${BLUE}sent jobs${NC} for ${BLUE}$DATE${NC}.mp4 to scheduler!"
     lineprint
 }
 
@@ -180,7 +180,6 @@ main()
         log_listener;
         streamlink_listen;
         runjobs;
-        cleanup_0byte;
         loop_end_message;
     done
 }

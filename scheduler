@@ -12,7 +12,7 @@ jobscomplete()
 logrotate ()
 {
    cat $LOGDIR/ffmpeg.log >> $LOGDIR/ffmpeg.log.old;
-   printf "\nsee ${BLUE}$LOGDIR/ffmpeg.log.old${NC} for completed jobs!\n\n" >> $LOGDIR/ffmpeg.log
+   printf "\nsee ${BLUE}$LOGDIR/ffmpeg.log.old${NC} for completed jobs!\n\n" > $LOGDIR/ffmpeg.log
 }
 
 

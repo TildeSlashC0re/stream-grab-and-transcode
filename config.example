@@ -2,6 +2,7 @@
 
 WORKDIR=""
 # ^ provide absolute path to the root of this directory
+#	!! NO TRAILING SLASH !!
 #
 LOGDIR=$WORKDIR"/log"
 
