@@ -18,7 +18,7 @@ saygoodbye()
 {
     sleep 1s;
     lineprint
-    printf "${BLUE}bye${NC}!"
+    printf "${HIGHLIGHT}bye${NC}!"
     lineprint
 }
 
@@ -26,7 +26,7 @@ saygoodbye()
 loop_end_message()
 {
     sleep 2s;
-            printf "${BLUE}listening once more${NC} ☜(ﾟヮﾟ☜)!\n"
+            printf "${HIGHLIGHT}listening once more${NC} ☜(ﾟヮﾟ☜)!\n"
             echo "- - - - - - - - - - - - - - - - - - - - - -"
             echo "- - - - - - N E W       J O B - - - - - - -"
             echo "- - - - - - - - - - - - - - - - - - - - - -"
@@ -37,14 +37,14 @@ basicsanity()
 {
     if [ ! -f ./config ]; then
         lineprint
-        printf "${BLUE}N O   C O N F I G   F O U N D${NC}!   » » »   S E E   ${BLUE}R E A D M E . m d ${NC}"
+        printf "${HIGHLIGHT}N O   C O N F I G   F O U N D${NC}!   » » »   S E E   ${HIGHLIGHT}R E A D M E . m d ${NC}"
         lineprint
         exit 2;
     fi
 
     if [ -z "$WORKDIR" ]; then
         lineprint
-        printf "P L E A S E   ${BLUE}D E F I N E   W O R K D I R${NC}   I N   ${BLUE}. / C O N F I G${NC}"
+        printf "P L E A S E   ${HIGHLIGHT}D E F I N E   W O R K D I R${NC}   I N   ${HIGHLIGHT}. / C O N F I G${NC}"
         lineprint
         exit 2;
     fi
@@ -52,7 +52,7 @@ basicsanity()
     if [ -z "$STREAM" ]; then
         trap "saygoodbye; exit 0" SIGINT
         lineprint
-        printf "${BLUE}No \$STREAM defined${NC} in ${BLUE}./config${NC}!\nPlease provide a stream to grab now:\n"
+        printf "${HIGHLIGHT}No \$STREAM defined${NC} in ${HIGHLIGHT}./config${NC}!\nPlease provide a stream to grab now:\n"
         read -p "" STREAM
         if [ -z "$STREAM" ]; then
             lineprint
@@ -71,6 +71,21 @@ basicsanity()
     fi
 }
 
+# Sanitize $STREAM for initial output directory. Create directory. Define $src
+contain-instance() {
+    src="${STREAM?need a string}" # receive input in first argument
+    src="${src//[^[:alnum:]]/}"     # replace all non-alnum characters to -
+    src="${src//+(-)/-}"             # convert multiple - to single -
+    src="${src/#-}"                  # remove - from start
+    src="${src/#httpswww}"                  # remove - from start
+    src="${src/%-}"                  # remove - from end
+    src="${src,,}"
+    src="src-$src"
+    mkdir -p $src
+    export src=$src
+}
+
+
 # Remove 0byte files recursively inside WORKDIR
 cleanup_0byte()
 {
@@ -81,7 +96,7 @@ cleanup_0byte()
 log_encoder()
 {
     lineprint
-    printf "${BLUE}ffmpeg${NC} log:"
+    printf "${HIGHLIGHT}ffmpeg${NC} log:"
     lineprint
     tail -F -n 10 $LOGDIR/ffmpeg.log 2>/dev/null;
 }
@@ -89,7 +104,7 @@ log_encoder()
 log_listener()
 {
     lineprint
-    printf "${BLUE}streamlink${NC} log:"
+    printf "${HIGHLIGHT}streamlink${NC} log:"
     lineprint
     printf "\n"
     tail -F $LOGDIR/$DATE.log 2>/dev/null &
@@ -121,9 +136,9 @@ menu()
 {
     trap menu SIGINT SIGTERM
     lineprint
-    printf "Do you want to ${BLUE}kill the scheduler${NC}?"
+    printf "Do you want to ${HIGHLIGHT}kill the scheduler${NC}?"
     lineprint
-    printf "${BLUE}[warning!]${NC} this will also ${BLUE}kill pending jobs${NC}!"
+    printf "${HIGHLIGHT}[warning!]${NC} this will also ${HIGHLIGHT}kill pending jobs${NC}!"
     lineprint
     kill_log_encoder;
     select yn in "Yes" "No" "Show Log"; do
@@ -141,9 +156,9 @@ runscheduler()
     if ! pgrep -x "scheduler" > /dev/null
         then
             setsid nohup ./scheduler >/dev/null 2>&1 &
-            printf "\n\n${BLUE}ffmpeg-scheduler${NC} started ${BLUE}in background.${NC}\n"
+            printf "\n\n${HIGHLIGHT}ffmpeg-scheduler${NC} started ${HIGHLIGHT}in background.${NC}\n"
         else
-            printf "\n\n${BLUE}ffmpeg-scheduler${NC} already running.${NC}\n"
+            printf "\n\n${HIGHLIGHT}ffmpeg-scheduler${NC} already running.${NC}\n"
     fi
 }
 
@@ -151,7 +166,7 @@ runscheduler()
 timestamp()
 {
     DATE="$(date +%m_%d_%Y-%H:%M:%S-%s)"
-    printf "\n\nwill write to ${BLUE}"$DATE"${NC}.mp4\n";
+    printf "\n\nwill write to ${HIGHLIGHT}"$DATE"${NC}.mp4\n";
 }
 
 # Streamlink
@@ -160,12 +175,12 @@ streamlink_listen()
     if [ -z "$PLAYER" ];
             then
                 lineprint
-                printf -- "- - - - - R U N N I N G   I N   ${BLUE}H E A D L E S S   M O D E${NC} - - - - -"
+                printf -- "- - - - - R U N N I N G   I N   ${HIGHLIGHT}H E A D L E S S   M O D E${NC} - - - - -"
                 lineprint
 
-                streamlink --config config.streamlink $STREAM -o src/$DATE.mp4 > $LOGDIR/$DATE.log 2>&1;
+                streamlink --config config.streamlink $STREAM -o $WORKDIR/$src/$DATE.mp4 > $LOGDIR/$DATE.log 2>&1;
             else
-                streamlink --config config.streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
+                streamlink --config config.streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee $WORKDIR/$src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
     fi
 }
 
@@ -175,7 +190,7 @@ runjobs()
     cleanup_0byte;
     setsid nohup ./transcoder > /dev/null 2>&1 &
     lineprint
-    printf "${BLUE}sent jobs${NC} for ${BLUE}$DATE${NC}.mp4 to scheduler!"
+    printf "${HIGHLIGHT}sent jobs${NC} for ${HIGHLIGHT}$DATE${NC}.mp4 to scheduler!"
     lineprint
 }
 
@@ -203,5 +218,6 @@ main()
 ## Roll the script!
 ##
 basicsanity;
+contain-instance;
 runscheduler;
 main

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+WORKDIR="/home/c0re/git-c0re/stream-grab-and-transcode"
+# ^ provide absolute path to the root of this directory
+#	!! NO TRAILING SLASH !!
+#
+LOGDIR=$WORKDIR"/log"
+
+STREAM=""
+# ^ target to grab e.g. https://stream.me/collapz
+#   leave empty if you want to provide the link manually
+#
+# STREAM="https://www.youtube.com/watch?v=___________"
+# ^ Do not use shortened (= youtu.be/*) links for YouTube targets!
+
+PLAYER=""
+# ^ the player of your choice, or none at all
+#   leave empty for headless mode
+
+PLAYER_OPTIONS=""
+# ^ pass options to your player
+
+ENCODER_FLAGS="-r 30 -c:v libx264 -preset veryfast -crf 17 -threads 8 -speed 4 -movflags +faststart -c:a aac -af \"aresample=first_pts=0\" -f mp4"
+# ^ you might want to adjust those to something that fits your usecase better
+
+
+# ===
+# Coloring - Terminal Colors
+# ===
+HIGHLIGHT='\033[0;34m'
+NC='\033[0m'
+
