@@ -27,6 +27,6 @@ ENCODER_FLAGS="-r 30 -c:v libx264 -preset veryfast -crf 17 -threads 8 -speed 4 -
 # ===
 # Coloring - Terminal Colors
 # ===
-BLUE='\033[0;34m'
+HIGHLIGHT='\033[0;34m'
 NC='\033[0m'
 
