@@ -73,16 +73,19 @@ basicsanity()
 
 # Sanitize $STREAM for initial output directory. Create directory. Define $src
 contain-instance() {
-    src="${STREAM?need a string}" # receive input in first argument
-    src="${src//[^[:alnum:]]/}"     # replace all non-alnum characters to -
-    src="${src//+(-)/-}"             # convert multiple - to single -
-    src="${src/#-}"                  # remove - from start
-    src="${src/#httpswww}"                  # remove - from start
-    src="${src/%-}"                  # remove - from end
-    src="${src,,}"
-    src="src-$src"
-    mkdir -p $src
-    export src=$src
+    srcstring="${STREAM?need a string}" # receive input in first argument
+    srcstring="${srcstring//[^[:alnum:]]/}"     # replace all non-alnum characters to -
+    srcstring="${srcstring//+(-)/-}"            # convert multiple - to single -
+    srcstring="${srcstring/#-}"                 # remove - from start
+    srcstring="${srcstring/#https}"             # remove "https" from start
+    srcstring="${srcstring/comwatchv/_}"        # YouTube underscore 
+    srcstring="${srcstring/streamme/streamme_}" # StreamMe underscore
+    srcstring="${srcstring/#www}"               # remove "www" from start
+    srcstring="${srcstring/%-}"                 # remove - from end
+    srcstring="${srcstring,,}"
+    srcstring="$srcstring"
+    mkdir -p src/$srcstring
+    export srcstring=$srcstring
 }
 
 
@@ -90,6 +93,7 @@ contain-instance() {
 cleanup_0byte()
 {
     find . -type f \( -not -name "ffmpeg.log" \) -size 0 -print0 | xargs -I{} -0 rm {};
+    find . -type d -empty -delete;
 }
 
 # Log output to console
@@ -134,17 +138,18 @@ rollcredits()
 # Exit screen
 menu()
 {
+    clear
     trap menu SIGINT SIGTERM
     lineprint
     printf "Do you want to ${HIGHLIGHT}kill the scheduler${NC}?"
     lineprint
-    printf "${HIGHLIGHT}[warning!]${NC} this will also ${HIGHLIGHT}kill pending jobs${NC}!"
+    printf "${HIGHLIGHT}[warning!]${NC} this will ${HIGHLIGHT}abort pending jobs${NC}!"
     lineprint
     kill_log_encoder;
     select yn in "Yes" "No" "Show Log"; do
         case $yn in
-            Yes ) kill_log_encoder; killjobs; pkill scheduler; saygoodbye; exit 0;;
-            No ) saygoodbye; exit 0;;
+            Yes ) kill_log_encoder; killjobs; pkill scheduler; cleanup_0byte; saygoodbye; exit 0;;
+            No ) cleanup_0byte; saygoodbye; exit 0;;
             Show\ Log ) log_encoder; menu;;
         esac
     done
@@ -166,7 +171,7 @@ runscheduler()
 timestamp()
 {
     DATE="$(date +%m_%d_%Y-%H:%M:%S-%s)"
-    printf "\n\nwill write to ${HIGHLIGHT}"$DATE"${NC}.mp4\n";
+    printf "\n\nwill write temporary output to: \n\nsrc/$srcstring/${HIGHLIGHT}"$DATE"${NC}.mp4\n";
 }
 
 # Streamlink
@@ -178,17 +183,18 @@ streamlink_listen()
                 printf -- "- - - - - R U N N I N G   I N   ${HIGHLIGHT}H E A D L E S S   M O D E${NC} - - - - -"
                 lineprint
 
-                streamlink --config config.streamlink $STREAM -o $WORKDIR/$src/$DATE.mp4 > $LOGDIR/$DATE.log 2>&1;
+                streamlink --config config.streamlink $STREAM -o $WORKDIR/src/$srcstring/$DATE.mp4 > $LOGDIR/$DATE.log 2>&1;
             else
-                streamlink --config config.streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee $WORKDIR/$src/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
+                streamlink --config config.streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee $WORKDIR/src/$srcstring/$DATE.mp4 | $PLAYER - $PLAYER_OPTIONS >> $LOGDIR/$DATE.log 2>&1;
     fi
 }
 
 # Send jobs to FFMPEG queue
 runjobs()
 {
+    clear
     cleanup_0byte;
-    setsid nohup ./transcoder > /dev/null 2>&1 &
+    setsid nohup ./encoder > /dev/null 2>&1 &
     lineprint
     printf "${HIGHLIGHT}sent jobs${NC} for ${HIGHLIGHT}$DATE${NC}.mp4 to scheduler!"
     lineprint

@@ -6,19 +6,22 @@ jobscomplete()
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
     printf -- "- - - - - - - - - - - - ${HIGHLIGHT}J O B   F I N I S H E D${NC} - - - - - - - - - - \n"
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+    printf "\n\ncheck ${HIGHLIGHT}out/$srcstring${NC} for the goodies!\n\n" >> $LOGDIR/ffmpeg.log
     echo "waiting for new job. . ." >> $LOGDIR/ffmpeg.log;
 }
 
 logrotate ()
 {
-   cat $LOGDIR/ffmpeg.log >> $LOGDIR/ffmpeg.log.old;
-   printf "\nsee ${HIGHLIGHT}$LOGDIR/ffmpeg.log.old${NC} for completed jobs!\n\n" > $LOGDIR/ffmpeg.log
+    cat $LOGDIR/ffmpeg.log >> $LOGDIR/ffmpeg.log.old;
+    printf "\nsee ${HIGHLIGHT}$LOGDIR/ffmpeg.log.old${NC} for completed jobs!\n\n" > $LOGDIR/ffmpeg.log
 }
 
 
 
 pipe=$WORKDIR/ffmpeg-queue
 trap "rm -f $pipe;" EXIT
+
+logrotate;
 
 # creating the FIFO    
 [[ -p $pipe ]] || mkfifo $pipe

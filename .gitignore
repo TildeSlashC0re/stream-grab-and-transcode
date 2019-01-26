@@ -2,13 +2,13 @@
 !*.*
 !*/
 !listener
-!transcoder
+!encoder
 !scheduler
 !/log/nuke-logs
 config
 /thumbs
 /log/*.log
 /log/*.log.old
-/src/*.mp4
-/raw-src/*.mp4
-/out/*.mp4
+/src/*
+/raw-src/*
+/out/*
