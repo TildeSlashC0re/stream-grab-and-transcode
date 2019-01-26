@@ -1,4 +1,4 @@
-# SGAT - StreamGrab And Transcode [1.0.2]
+# SGAT - StreamGrab And Transcode [1.1]
 
 >A wrapper for ffmpeg and streamlink to grab your favorite streams live and encode them right after
 
