@@ -4,6 +4,18 @@ source config 2>/dev/null
 # Go to end-sequence on CTRL-C
 trap rollcredits SIGINT SIGTERM
 
+intro() {
+    clear
+    printf -- "$HIGHLIGHT"
+    printf -- "  .|'''.|   ..|'''.|      |     |''||''| \n"
+    printf -- "  ||..  '  .|'     '     |||       ||    \n"
+    printf -- "   ''|||.  ||    ....   |  ||      ||    \n"
+    printf -- " .     '|| '|.    ||   .''''|.     ||    \n"
+    printf -- " |'....|'   ''|...'|  .|.  .||.   .||.   \n${NC}"
+    printf -- " - - - - - - - -[ _ _ _ ] - - - - - - - -"
+    sleep 2s;
+}
+
 ##
 ## Declare functions
 ##
@@ -52,7 +64,7 @@ basicsanity()
     if [ -z "$STREAM" ]; then
         trap "saygoodbye; exit 0" SIGINT
         lineprint
-        printf "${HIGHLIGHT}No \$STREAM defined${NC} in ${HIGHLIGHT}./config${NC}!\nPlease provide a stream to grab now:\n"
+        printf "${HIGHLIGHT}No \$STREAM${NC} in ${HIGHLIGHT}./config${NC} defined!\nPlease provide a stream to grab now:\n"
         read -p "" STREAM
         if [ -z "$STREAM" ]; then
             lineprint
@@ -71,7 +83,58 @@ basicsanity()
     fi
 }
 
-# Sanitize $STREAM for initial output directory. Create directory. Define $src
+restreamflag() {
+    lineprint
+    printf -- "\n- - - - - - - R E S T R E A M   F L A G   ${HIGHLIGHT}A C T I V E ${NC}! - - - - - -"
+}
+
+restreamkeycheck() {
+if [ -z "$RESTREAM_ENDPOINT_KEY" ]; then
+        lineprint
+        printf "Provide your ${HIGHLIGHT}keys${NC} please!${NC}\n"
+        read -p "" RESTREAM_ENDPOINT_KEY
+            if [ -z "$RESTREAM_ENDPOINT_KEY" ]; then
+                printf "No ${HIGHLIGHT}keys${NC} no ${HIGHLIGHT}restream!${NC}\n"
+                saygoodbye; exit 0
+            else
+                restreamflag
+            fi
+    else
+        restreamflag
+    fi
+}
+
+restreamcheck() {
+    trap "saygoodbye; exit 0" SIGINT SIGTERM
+    clear
+    if [ ! "$RESTREAM" = "true" ]; then
+        true
+    else
+        if [ -z "$RESTREAM_ENDPOINT" ]; then
+            lineprint
+            printf "No ${HIGHLIGHT}\$RESTREAM_ENDPOINT${NC} in ${HIGHLIGHT}./config${NC} defined! Please provide a ${HIGHLIGHT}rtmp://${NC} target to restream to now:\n"
+            read -p "" RESTREAM_ENDPOINT
+                if [ -z "$RESTREAM_ENDPOINT" ]; then
+                    lineprint
+                    echo "No endpoint provided, will continue without restreaming the source!"
+                else
+                    restreamkeycheck
+                fi
+        else
+            restreamkeycheck
+        fi
+    fi
+}
+
+restream() {
+    streamlink --config config.streamlink $STREAM -O 2>> $LOGDIR/$DATE.log | tee $WORKDIR/src/$srcstring/$DATE.mp4 | transcode >> $LOGDIR/$DATE.log 2>&1;
+}
+
+transcode() {
+    ffmpeg -hide_banner -re -i - $TRANSCODER_FLAGS -movflags frag_keyframe+empty_moov -f flv $RESTREAM_ENDPOINT/$RESTREAM_ENDPOINT_KEY
+}
+
+# Truncate $STREAM for something more handy. Define $srcstring. Use that as an identifier.
 contain-instance() {
     srcstring="${STREAM?need a string}" # receive input in first argument
     srcstring="${srcstring//[^[:alnum:]]/}"     # replace all non-alnum characters to -
@@ -89,7 +152,7 @@ contain-instance() {
 }
 
 
-# Remove 0byte files recursively inside WORKDIR
+# Remove 0byte files recursively inside WORKDIR, remove empty directories inside WORKDIR.
 cleanup_0byte()
 {
     find . -type f \( -not -name "ffmpeg.log" \) -size 0 -print0 | xargs -I{} -0 rm {};
@@ -172,6 +235,12 @@ timestamp()
 {
     DATE="$(date +%m_%d_%Y-%H:%M:%S-%s)"
     printf "\n\nwill write temporary output to: \n\nsrc/$srcstring/${HIGHLIGHT}"$DATE"${NC}.mp4\n";
+    if [ ! "$RESTREAM" = "true" ]; then
+        true
+    else
+        lineprint
+        printf "\nRestreaming to: ${HIGHLIGHT}"$RESTREAM_ENDPOINT"${NC}\n";
+    fi
 }
 
 # Streamlink
@@ -196,7 +265,7 @@ runjobs()
     cleanup_0byte;
     setsid nohup ./encoder > /dev/null 2>&1 &
     lineprint
-    printf "${HIGHLIGHT}sent jobs${NC} for ${HIGHLIGHT}$DATE${NC}.mp4 to scheduler!"
+    printf "${HIGHLIGHT}scheduled job${NC} for scrc/$srcstring/${HIGHLIGHT}$DATE${NC}.mp4!"
     lineprint
 }
 
@@ -209,12 +278,16 @@ killjobs()
 # That main-function really tied the room together.
 main()
 {
-    trap rollcredits SIGINT
+    trap rollcredits SIGINT SIGTERM
     while true; do
         cd $WORKDIR
         timestamp;
         log_listener;
-        streamlink_listen;
+        if [ "$RESTREAM" = "true" ]; then
+            restream
+        else
+            streamlink_listen;
+        fi
         runjobs;
         loop_end_message;
     done
@@ -223,7 +296,10 @@ main()
 ##
 ## Roll the script!
 ##
+intro;
 basicsanity;
 contain-instance;
 runscheduler;
+restreamcheck;
 main
+

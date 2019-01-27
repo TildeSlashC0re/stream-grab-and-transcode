@@ -1,4 +1,4 @@
-# SGAT - StreamGrab And Transcode [1.1]
+# SGAT - StreamGrab And Transcode [1.1.1]
 
 >A wrapper for ffmpeg and streamlink to grab your favorite streams live and encode them right after
 
@@ -8,7 +8,7 @@
     git clone https://github.com/TildeSlashC0re/stream-grab-and-transcode.git;
     cd stream-grab-and-transcode;
     cat config.example > config;
-    nano config # Provide, at minimum, $WORKDIR
+    nano config # Provide, at minimum(!), $WORKDIR
 
     # Optionally you can also
     nano config.streamlink

@@ -1,31 +1,62 @@
 #!/bin/bash
 
-WORKDIR=""
-# ^ provide absolute path to the root of this directory
-#	!! NO TRAILING SLASH !!
 #
+#   provide absolute path to the root of this git repository
+#
+#   e.g.
+#   WORKDIR=/home/c0re/Downloads/stream-grab-and-transcode
+#
+#           !!!!!!!!!!!!!!!!!!!!!!!
+#           !! NO TRAILING SLASH !!
+#           !!!!!!!!!!!!!!!!!!!!!!!
+#
+WORKDIR=""
 LOGDIR=$WORKDIR"/log"
 
-STREAM=""
-# ^ target to grab e.g. https://stream.me/collapz
-#   leave empty if you want to provide the link manually
 #
-# STREAM="https://www.youtube.com/watch?v=___________"
-# ^ Do not use shortened (= youtu.be/*) links for YouTube targets!
+#   target to grab e.g. https://stream.me/collapz
+#   if left empty, you will be prompted on each run. 
+#
+#   STREAM="https://www.youtube.com/watch?v=___________"
+#   Do not use shortened (= youtu.be/*) links for YouTube targets!
+STREAM=""
 
-PLAYER="mpv"
-# ^ the player of your choice, or none at all
-#   leave empty for headless mode
+#
+#   the player of your choice 
+#   (for playback during live recording)
+#   leave empty for headless mode / server environment
+PLAYER=""
 
+#
+#   pass options to your player
+#
 PLAYER_OPTIONS=""
-# ^ pass options to your player
 
-ENCODER_FLAGS="-r 30 -c:v libx264 -preset veryfast -crf 17 -threads 8 -speed 4 -movflags +faststart -c:a aac -af \"aresample=first_pts=0\" -f mp4"
-# ^ you might want to adjust those to something that fits your usecase better
+#
+#   ffmpeg encoding flags.
+#   You may adjust those according to your needs. 
+#   Partial Doc: https://trac.ffmpeg.org/wiki/Encode/H.264
+#
+ENCODER_FLAGS="-r 30 -c:v libx264 -preset veryfast -crf 23 -speed 4 -movflags +faststart -c:a aac -af \"aresample=first_pts=0\" -f mp4"
+
+#---R E S T R E A M I N G----------------------------------------------------------------------------------------------------------------------------------
+#
+#   Use at your own discretion
+#   it's pretty sweet though. 
+#   (just don't get yourself banned for stupid shit)
+
+RESTREAM="false"
+#RESTREAM_ENDPOINT="rtmp://host/endpoint"
+#RESTREAM_ENDPOINT_KEY="yourkey"
+#TRANSCODER_FLAGS="-c:v libx264 -x264-params nal-hrd=cbr -b:v 2000k -minrate 2000k -maxrate 2000k -bufsize 2000k -preset fast -tune film -x264-params keyint=60 -pix_fmt yuv420p -c:a aac"
+
 
 
 # ===
-# Coloring - Terminal Colors
+# Highlight Color - There is usually no need to change this.
+# So feel free to do it anyway ;)
+#
+# NC - No Color
 # ===
 HIGHLIGHT='\033[0;34m'
 NC='\033[0m'
