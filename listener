@@ -170,6 +170,7 @@ log_encoder()
 
 log_listener()
 {
+    touch $LOGDIR/$DATE.log
     lineprint
     printf "${HIGHLIGHT}streamlink${NC} log:"
     lineprint
@@ -265,8 +266,19 @@ runjobs()
     cleanup_0byte;
     setsid nohup ./encoder > /dev/null 2>&1 &
     lineprint
-    printf "${HIGHLIGHT}scheduled job${NC} for scrc/$srcstring/${HIGHLIGHT}$DATE${NC}.mp4!"
+    printf "${HIGHLIGHT}scheduled job${NC} for src/$srcstring/${HIGHLIGHT}$DATE${NC}.mp4!"
     lineprint
+}
+
+notify()
+{
+    if grep -E -q 'Available' $LOGDIR/$DATE.log
+        then
+            cat $LOGDIR/$DATE.log | apprise -t "$NOTIFY_STREAM_LIVE" "$APPRISE_HOOK_TARGET"; 
+        else
+            sleep 2s;
+            notify;
+    fi
 }
 
 # Kill a running FFMPEG job
@@ -286,7 +298,8 @@ main()
         if [ "$RESTREAM" = "true" ]; then
             restream
         else
-            streamlink_listen;
+            notify &
+            streamlink_listen
         fi
         runjobs;
         loop_end_message;

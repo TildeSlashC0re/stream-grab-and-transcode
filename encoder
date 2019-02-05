@@ -7,12 +7,18 @@ mkdir -p raw-src/$srcstring
 cd $WORKDIR/src/$srcstring;
 shopt -s nullglob
 
+notify()
+{
+    cat $LOGDIR/ffmpeg.log | sed 's/\x1b\[[0-9;]*m//g' | sed -e "1s/^/\`\`\`sh\\n/" -e "\$s/\$/\`\`\`/" | apprise -t "$NOTIFY_JOB_RUNNING" "$APPRISE_HOOK_TARGET"; 
+}
+
 sendjob()
 {
     for FILE in *.mp4; do
         [ -f "$FILE" ] || continue
         echo "ffmpeg -y -i $WORKDIR/src/$srcstring/$FILE -hide_banner $ENCODER_FLAGS $WORKDIR/out/$srcstring/$FILE > $LOGDIR/ffmpeg.log 2>&1" > $WORKDIR/ffmpeg-queue
         sleep 1s;
+        notify
         mv $FILE $WORKDIR/raw-src/$srcstring/
     done
 }

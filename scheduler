@@ -1,6 +1,11 @@
 #!/bin/bash
 source config
 
+notify()
+{
+    ls -qsh1 out/$srcstring raw-src/$srcstring | apprise -t "$NOTIFY_ENCODE_FINISHED" "$APPRISE_HOOK_TARGET"; 
+}
+
 jobscomplete()
 {
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
@@ -8,6 +13,7 @@ jobscomplete()
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
     printf "\n\ncheck ${HIGHLIGHT}out/$srcstring${NC} for the goodies!\n\n" >> $LOGDIR/ffmpeg.log
     echo "waiting for new job. . ." >> $LOGDIR/ffmpeg.log;
+    notify
 }
 
 logrotate ()
