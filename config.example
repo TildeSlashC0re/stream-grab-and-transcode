@@ -15,14 +15,14 @@ LOGDIR=$WORKDIR"/log"
 
 #
 #   target to grab e.g. https://stream.me/collapz
-#   if left empty, you will be prompted on each run. 
+#   if left empty, you will be prompted on each run.
 #
 #   STREAM="https://www.youtube.com/watch?v=___________"
 #   Do not use shortened (= youtu.be/*) links for YouTube targets!
 STREAM=""
 
 #
-#   the player of your choice 
+#   the player of your choice
 #   (for playback during live recording)
 #   leave empty for headless mode / server environment
 PLAYER=""
@@ -34,22 +34,33 @@ PLAYER_OPTIONS=""
 
 #
 #   ffmpeg encoding flags.
-#   You may adjust those according to your needs. 
+#   You may adjust those according to your needs.
 #   Partial Doc: https://trac.ffmpeg.org/wiki/Encode/H.264
 #
-ENCODER_FLAGS="-r 30 -c:v libx264 -preset veryfast -crf 23 -speed 4 -movflags +faststart -c:a aac -af \"aresample=first_pts=0\" -f mp4"
+ENCODER_FLAGS="-r 30 -c:v libx264 -preset veryfast -crf 23 -speed 4 -movflags +faststart -c:a aac -af \"aresample=first_pts=0\""
+
+#
+#   Notification-hooks via apprise:
+#   See documentation: https://github.com/caronc/apprise/wiki
+#
+NOTIFY_STREAM_LIVE="[🔴] SGAT is grabbing your target!"
+NOTIFY_JOB_RUNNING="[⏳] SGAT is processing an encoding job!"
+NOTIFY_ENCODE_FINISHED="[✅] SGAT has finished an encoding job!"
+#
+#   Example: APPRISE_HOOK_TARGET="discord://<webhook-id>/<key>/?thumbnail=no&avatar=no tgram://<api-key>/<chat-id>?format=markdown"
+#                                  ^ sends notification to discord                       ^ sends notification to telegram
+APPRISE_HOOK_TARGET=""
 
 #---R E S T R E A M I N G----------------------------------------------------------------------------------------------------------------------------------
 #
 #   Use at your own discretion
-#   it's pretty sweet though. 
+#   it's pretty sweet though.
 #   (just don't get yourself banned for stupid shit)
 
 RESTREAM="false"
 #RESTREAM_ENDPOINT="rtmp://host/endpoint"
 #RESTREAM_ENDPOINT_KEY="yourkey"
 #TRANSCODER_FLAGS="-c:v libx264 -x264-params nal-hrd=cbr -b:v 2000k -minrate 2000k -maxrate 2000k -bufsize 2000k -preset fast -tune film -x264-params keyint=60 -pix_fmt yuv420p -c:a aac"
-
 
 
 # ===

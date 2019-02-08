@@ -3,7 +3,15 @@ source config
 
 notify()
 {
-    ls -qsh1 out/$srcstring raw-src/$srcstring | apprise -t "$NOTIFY_ENCODE_FINISHED" "$APPRISE_HOOK_TARGET"; 
+    if [ ! -z "$APPRISE_HOOK_TARGET" ]; then
+        head -c 1950 | 
+            ls -qsh1 out/$srcstring raw-src/$srcstring |
+            sed 's/\x1b\[[0-9;]*m//g' |
+            sed -e "1s/^/\`\`\`nginx\\n/" -e "\$s/\$/\`\`\`/" |
+            apprise -t "$NOTIFY_ENCODE_FINISHED" "$APPRISE_HOOK_TARGET";
+        else
+            true
+    fi
 }
 
 jobscomplete()

@@ -1,5 +1,6 @@
 #!/bin/bash
 source config 2>/dev/null
+ARG1=$1
 
 # Go to end-sequence on CTRL-C
 trap rollcredits SIGINT SIGTERM
@@ -81,6 +82,8 @@ basicsanity()
             fi
         fi
     fi
+
+
 }
 
 restreamflag() {
@@ -151,6 +154,21 @@ contain-instance() {
     export srcstring=$srcstring
 }
 
+argument(){
+    if [ -z "$ARG1" ]; then
+        true
+    else
+        if streamlink --can-handle-url $ARG1 2>/dev/null; then
+            STREAM=$ARG1
+            true
+        else
+            lineprint
+            echo "Incompatible stream provided. Exiting!";
+            saygoodbye
+            exit 1 
+        fi
+    fi
+}
 
 # Remove 0byte files recursively inside WORKDIR, remove empty directories inside WORKDIR.
 cleanup_0byte()
@@ -272,12 +290,19 @@ runjobs()
 
 notify()
 {
-    if grep -E -q 'Available' $LOGDIR/$DATE.log
-        then
-            cat $LOGDIR/$DATE.log | apprise -t "$NOTIFY_STREAM_LIVE" "$APPRISE_HOOK_TARGET"; 
+    if [ ! -z "$APPRISE_HOOK_TARGET" ]; then
+        if grep -E -q 'Available' $LOGDIR/$DATE.log
+            then
+                cat $LOGDIR/$DATE.log |
+                sed 's/\x1b\[[0-9;]*m//g' |
+                sed -e "1s/^/\`\`\`arm\\n/" -e "\$s/\$/\`\`\`/" |
+                apprise -t "$NOTIFY_STREAM_LIVE" "$APPRISE_HOOK_TARGET"; 
+            else
+                sleep 2s;
+                notify;
+        fi
         else
-            sleep 2s;
-            notify;
+            true
     fi
 }
 
@@ -311,6 +336,7 @@ main()
 ##
 intro;
 basicsanity;
+argument;
 contain-instance;
 runscheduler;
 restreamcheck;

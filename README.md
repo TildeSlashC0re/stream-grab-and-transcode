@@ -1,6 +1,9 @@
-# SGAT - StreamGrab And Transcode [1.1.1]
+# SGAT - StreamGrab And Transcode [1.1.2]
 
 >A wrapper for ffmpeg and streamlink to grab your favorite streams live and encode them right after
+
+**Note:** a more thorough documentation is scheduled for **soon™**
+### If you ran SGAT 1.1.1 and below, **please update your config!**
 
 ## Installation
 
@@ -22,10 +25,19 @@
     pip install streamlink
 ```
 
+### Optional Dependencies
+```bash
+    # if you defined $APPRISE_HOOK_TARGET in your config you need to 
+    pip install apprise
+```
+
 ## Running 
 
 ```bash
     ./listener
+
+    # OR
+    ./listener <url>
 ```
 
 ## Exiting
