@@ -21,15 +21,20 @@ notify_output(){
 notify()
 {
     if [ ! -z "$APPRISE_HOOK_TARGET" ]; then
-        cat $LOGDIR/ffmpeg.log |
-            awk '!seen[$0]++' |
-            sed 's/\x1b\[[0-9;]*m//g' |
-            sed -n '/Metadata.*/q;p' |
-            head -c 1900 |
-            sed -e "1s/^/\`\`\`arm\\n/" -e "\$s/\$/\\n\`\`\`/" |
-            sed -e "1s/^/\\nEncoder\ flags\:\\n\`$ENCODER_FLAGS\`\\n\\n/" |
-            apprise -t "$NOTIFY_JOB_RUNNING" "$APPRISE_HOOK_TARGET";
-            notify_output
+        if grep -E -q 'Input' $LOGDIR/ffmpeg.log 
+            then
+            cat $LOGDIR/ffmpeg.log |
+                awk '!seen[$0]++' |
+                sed 's/\x1b\[[0-9;]*m//g' |
+                sed -n '/Metadata.*/q;p' |
+                head -c 1900 |
+                sed -e "1s/^/\`\`\`arm\\n/" -e "\$s/\$/\\n\`\`\`/" |
+                sed -e "1s/^/\\nEncoder\ flags\:\\n\`$ENCODER_FLAGS\`\\n\\n/" |
+                apprise -t "$NOTIFY_JOB_RUNNING" "$APPRISE_HOOK_TARGET";
+                notify_output
+            else
+                true
+        fi
        else
             true
     fi

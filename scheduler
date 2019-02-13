@@ -4,7 +4,7 @@ source config
 notify()
 {
     if [ ! -z "$APPRISE_HOOK_TARGET" ]; then
-        head -c 1950 | 
+        head -c 1950 |
             ls -qsh1 out/$srcstring raw-src/$srcstring |
             sed 's/\x1b\[[0-9;]*m//g' |
             sed -e "1s/^/\`\`\`nginx\\n/" -e "\$s/\$/\`\`\`/" |
@@ -16,7 +16,6 @@ notify()
 
 jobscomplete()
 {
-    notify
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
     printf -- "- - - - - - - - - - - - ${HIGHLIGHT}J O B   F I N I S H E D${NC} - - - - - - - - - - \n"
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
@@ -37,11 +36,11 @@ trap "rm -f $pipe;" EXIT
 
 logrotate;
 
-# creating the FIFO    
+# creating the FIFO
 [[ -p $pipe ]] || mkfifo $pipe
 
 while true; do
-    # can't just use "while read line" if we 
+    # can't just use "while read line" if we
     # want this script to continue running.
     read line < $pipe
 
@@ -49,6 +48,7 @@ while true; do
     # feel free to improve it.
     # we ensure that the command is a ffmpeg one.
     [[ $line =~ ^ffmpeg ]] && bash <<< "$line"
-    logrotate; 
+    logrotate;
+    notify;
     jobscomplete >> $LOGDIR/ffmpeg.log
 done
