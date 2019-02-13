@@ -16,12 +16,12 @@ notify()
 
 jobscomplete()
 {
+    notify
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
     printf -- "- - - - - - - - - - - - ${HIGHLIGHT}J O B   F I N I S H E D${NC} - - - - - - - - - - \n"
     echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
     printf "\n\ncheck ${HIGHLIGHT}out/$srcstring${NC} for the goodies!\n\n" >> $LOGDIR/ffmpeg.log
     echo "waiting for new job. . ." >> $LOGDIR/ffmpeg.log;
-    notify
 }
 
 logrotate ()

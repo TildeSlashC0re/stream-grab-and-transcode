@@ -7,16 +7,30 @@ mkdir -p raw-src/$srcstring
 cd $WORKDIR/src/$srcstring;
 shopt -s nullglob
 
+notify_output(){
+    cat $LOGDIR/ffmpeg.log |
+        awk '!seen[$0]++' |
+        sed 's/\x1b\[[0-9;]*m//g' |
+        sed -n '/Metadata/,$p' |
+        sed -n '/frame.*/q;p' |
+        head -c 1900 |
+        sed -e "1s/^/\`\`\`arm\\n/" -e "\$s/\$/\\n\`\`\`/" |
+        apprise "$APPRISE_HOOK_TARGET";
+}
+
 notify()
 {
     if [ ! -z "$APPRISE_HOOK_TARGET" ]; then
-        head -c 1950 $LOGDIR/ffmpeg.log |
+        cat $LOGDIR/ffmpeg.log |
+            awk '!seen[$0]++' |
             sed 's/\x1b\[[0-9;]*m//g' |
-            sed -n '/frame.*/q;p' |
+            sed -n '/Metadata.*/q;p' |
+            head -c 1900 |
             sed -e "1s/^/\`\`\`arm\\n/" -e "\$s/\$/\\n\`\`\`/" |
             sed -e "1s/^/\\nEncoder\ flags\:\\n\`$ENCODER_FLAGS\`\\n\\n/" |
             apprise -t "$NOTIFY_JOB_RUNNING" "$APPRISE_HOOK_TARGET";
-        else
+            notify_output
+       else
             true
     fi
 }

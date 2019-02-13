@@ -78,7 +78,7 @@ basicsanity()
             else
                 echo "Incompatible stream provided. Exiting!";
                 saygoodbye
-                exit 1 
+                exit 1
             fi
         fi
     fi
@@ -144,7 +144,7 @@ contain-instance() {
     srcstring="${srcstring//+(-)/-}"            # convert multiple - to single -
     srcstring="${srcstring/#-}"                 # remove - from start
     srcstring="${srcstring/#https}"             # remove "https" from start
-    srcstring="${srcstring/comwatchv/_}"        # YouTube underscore 
+    srcstring="${srcstring/comwatchv/_}"        # YouTube underscore
     srcstring="${srcstring/streamme/streamme_}" # StreamMe underscore
     srcstring="${srcstring/#www}"               # remove "www" from start
     srcstring="${srcstring/%-}"                 # remove - from end
@@ -165,7 +165,7 @@ argument(){
             lineprint
             echo "Incompatible stream provided. Exiting!";
             saygoodbye
-            exit 1 
+            exit 1
         fi
     fi
 }
@@ -294,9 +294,10 @@ notify()
         if grep -E -q 'Available' $LOGDIR/$DATE.log
             then
                 cat $LOGDIR/$DATE.log |
+                awk '!seen[$0]++' |
                 sed 's/\x1b\[[0-9;]*m//g' |
                 sed -e "1s/^/\`\`\`arm\\n/" -e "\$s/\$/\`\`\`/" |
-                apprise -t "$NOTIFY_STREAM_LIVE" "$APPRISE_HOOK_TARGET"; 
+                apprise -t "$NOTIFY_STREAM_LIVE" "$APPRISE_HOOK_TARGET";
             else
                 sleep 2s;
                 notify;
